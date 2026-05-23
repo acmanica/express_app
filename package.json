@@ -1,0 +1,21 @@
+{
+  "name": "2-expess-app",
+  "version": "1.0.0",
+  "description": "API basica con Express",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node --test"
+  },
+  "keywords": [
+    "node",
+    "express",
+    "api"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}

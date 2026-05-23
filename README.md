@@ -1,4 +1,4 @@
-# 2-expess-app
+# 2-expes-app
 
 API basica con Express que expone un ejemplo sencillo de dos agentes:
 

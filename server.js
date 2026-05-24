@@ -46,9 +46,9 @@ function featuresHandler(_req, res) {
 }
 
 function agentsMathHandler(req, res) {
-  const { number, add, multiply } = req.body;
+  const { number, add, multiply } = req.body ?? {};
 
-  if (![number, add, multiply].every((value) => typeof value === "number")) {
+  if (![number, add, multiply].every(Number.isFinite)) {
     return res.status(400).json({
       error: "Debes enviar number, add y multiply como numeros."
     });

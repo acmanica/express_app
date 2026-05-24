@@ -118,3 +118,33 @@ test("agentsMathHandler valida que todos los valores sean numeros", () => {
     error: "Debes enviar number, add y multiply como numeros."
   });
 });
+
+test("agentsMathHandler responde 400 cuando no hay body", () => {
+  const req = {};
+  const res = createMockResponse();
+
+  agentsMathHandler(req, res);
+
+  assert.equal(res.statusCode, 400);
+  assert.deepEqual(res.body, {
+    error: "Debes enviar number, add y multiply como numeros."
+  });
+});
+
+test("agentsMathHandler rechaza numeros no finitos", () => {
+  const req = {
+    body: {
+      number: Number.NaN,
+      add: 5,
+      multiply: 3
+    }
+  };
+  const res = createMockResponse();
+
+  agentsMathHandler(req, res);
+
+  assert.equal(res.statusCode, 400);
+  assert.deepEqual(res.body, {
+    error: "Debes enviar number, add y multiply como numeros."
+  });
+});

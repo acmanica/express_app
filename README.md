@@ -155,3 +155,7 @@ Ejecuta:
 ```bash
 npm test
 ```
+
+## Documentacion
+
+El detalle del ajuste reciente de validacion y pruebas esta en [docs/CHANGELOG_FIX_BUGS.md](/Users/alvarocortes/Documents/Codex/2-expess-app/docs/CHANGELOG_FIX_BUGS.md:1).

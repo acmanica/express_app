@@ -36,6 +36,21 @@ npm test
 
 Ejecuta las pruebas unitarias con `node:test`.
 
+## CI/CD
+
+El repositorio incluye un workflow de GitHub Actions en `.github/workflows/ci-cd.yml`.
+
+- CI: corre `npm ci` y `npm test` en Node.js 18, 20 y 22 para cada `push` y `pull_request` hacia `main` o `develop`.
+- CD: en cada `push` a `main`, dispara un despliegue por webhook si existe el secret `DEPLOY_WEBHOOK_URL`.
+
+Si quieres activar CD, agrega en GitHub el secret:
+
+```bash
+DEPLOY_WEBHOOK_URL=<tu-webhook-de-deploy>
+```
+
+Si ese secret no existe, el workflow valida el proyecto pero omite el despliegue.
+
 ## Endpoints
 
 ### `GET /status`

@@ -40,14 +40,14 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    env:
+      DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
 
     steps:
       - name: Trigger deployment webhook
-        if: ${{ secrets.DEPLOY_WEBHOOK_URL != '' }}
-        env:
-          DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
+        if: ${{ env.DEPLOY_WEBHOOK_URL != '' }}
         run: curl --fail --silent --show-error --location --request POST "$DEPLOY_WEBHOOK_URL"
 
       - name: Skip deploy when webhook is missing
-        if: ${{ secrets.DEPLOY_WEBHOOK_URL == '' }}
+        if: ${{ env.DEPLOY_WEBHOOK_URL == '' }}
         run: echo "DEPLOY_WEBHOOK_URL no esta configurado. CI ejecutado; CD omitido."

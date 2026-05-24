@@ -2,12 +2,19 @@
 
 ## Objetivo
 
-Validar rapidamente que la API levanta bien y que sus endpoints principales responden como se espera.
+Validar que la API levanta bien, que Prisma puede leer SQLite y que los endpoints principales responden como se espera.
 
 ## Requisitos
 
 - Node.js instalado
 - Dependencias instaladas con `npm install`
+- Base local preparada con:
+
+```bash
+npm run prisma:generate
+npm run prisma:migrate -- --name init_features
+npx prisma db seed
+```
 
 ## Levantar el servicio
 
@@ -27,8 +34,6 @@ http://localhost:3011
 
 ### 1. Verificar estado del servicio
 
-Ejecuta:
-
 ```bash
 curl http://localhost:3011/status
 ```
@@ -42,9 +47,7 @@ Respuesta esperada:
 }
 ```
 
-### 2. Verificar listado de caracteristicas
-
-Ejecuta:
+### 2. Verificar listado de caracteristicas desde SQLite
 
 ```bash
 curl http://localhost:3011/features
@@ -54,11 +57,9 @@ Validar que la respuesta incluya:
 
 - Un campo `title`
 - Un arreglo `items`
-- 5 elementos descriptivos
+- Cinco elementos sembrados por Prisma
 
 ### 3. Verificar flujo exitoso de agentes
-
-Ejecuta:
 
 ```bash
 curl -X POST http://localhost:3011/agents/math \
@@ -91,9 +92,7 @@ Respuesta esperada:
 }
 ```
 
-### 4. Verificar validacion de datos
-
-Ejecuta:
+### 4. Verificar validacion de entrada
 
 ```bash
 curl -X POST http://localhost:3011/agents/math \
@@ -111,8 +110,6 @@ Respuesta esperada:
 
 ### 5. Verificar body ausente
 
-Ejecuta:
-
 ```bash
 curl -X POST http://localhost:3011/agents/math
 ```
@@ -124,8 +121,6 @@ Resultado esperado:
 
 ## Verificacion automatica
 
-Tambien puedes ejecutar:
-
 ```bash
 npm test
 ```
@@ -133,13 +128,3 @@ npm test
 Resultado esperado:
 
 - Todas las pruebas deben pasar
-
-## Criterio de aprobacion
-
-La prueba smoke se considera aprobada si:
-
-- El servidor inicia sin errores
-- `GET /status` responde correctamente
-- `GET /features` responde correctamente
-- `POST /agents/math` funciona con datos validos
-- `POST /agents/math` rechaza datos invalidos sin romper la API

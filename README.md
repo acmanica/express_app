@@ -1,9 +1,37 @@
-# 2-expes-app
+# 2-expess-app
 
-API basica con Express que expone un ejemplo sencillo de dos agentes:
+API basica con Express que expone:
 
-- `sum-agent`: suma un numero.
-- `multiply-agent`: multiplica el resultado anterior.
+- `GET /status`: estado del servicio.
+- `GET /features`: lista de caracteristicas obtenida desde SQLite con Prisma.
+- `POST /agents/math`: ejecuta dos agentes en secuencia.
+
+## Stack
+
+- Node.js
+- Express
+- Prisma ORM
+- SQLite
+
+## Estructura
+
+```text
+.
+├── app.js
+├── controllers/
+├── services/
+├── repositories/
+├── lib/
+├── prisma/
+└── server.js
+```
+
+- `server.js`: arranque HTTP.
+- `app.js`: composicion de Express y dependencias.
+- `controllers/`: capa HTTP.
+- `services/`: logica de negocio.
+- `repositories/`: acceso a datos.
+- `prisma/`: schema, migraciones y seed.
 
 ## Requisitos
 
@@ -14,7 +42,13 @@ API basica con Express que expone un ejemplo sencillo de dos agentes:
 
 ```bash
 npm install
+cp .env.example .env
+npm run prisma:generate
+npm run prisma:migrate -- --name init_features
+npx prisma db seed
 ```
+
+`prisma migrate dev` crea la base SQLite local y aplica las migraciones.
 
 ## Scripts
 
@@ -34,34 +68,41 @@ Inicia la API en modo watch.
 npm test
 ```
 
-Ejecuta las pruebas unitarias con `node:test`.
-
-## CI/CD
-
-El repositorio incluye un workflow de GitHub Actions en `.github/workflows/ci-cd.yml`.
-
-- CI: corre `npm ci` y `npm test` en Node.js 18, 20 y 22 para cada `push` y `pull_request` hacia `main` o `develop`.
-- CD: en cada `push` a `main`, dispara un despliegue por webhook si existe el secret `DEPLOY_WEBHOOK_URL`.
-
-Si quieres activar CD, agrega en GitHub el secret:
+Ejecuta las pruebas unitarias.
 
 ```bash
-DEPLOY_WEBHOOK_URL=<tu-webhook-de-deploy>
+npm run prisma:generate
 ```
 
-Si ese secret no existe, el workflow valida el proyecto pero omite el despliegue.
+Genera Prisma Client.
+
+```bash
+npm run prisma:migrate -- --name <nombre>
+```
+
+Crea y aplica una nueva migracion.
+
+```bash
+npx prisma db seed
+```
+
+Ejecuta el seed inicial de `features`.
+
+## Configuracion
+
+La conexion local usa `.env`:
+
+```bash
+DATABASE_URL="file:./dev.db"
+```
+
+Tienes una referencia en `.env.example`.
+
+El servidor usa `PORT` y por defecto escucha en `3011`.
 
 ## Endpoints
 
 ### `GET /status`
-
-Devuelve el estado del servicio.
-
-Ejemplo:
-
-```bash
-curl http://localhost:3011/status
-```
 
 Respuesta:
 
@@ -74,30 +115,24 @@ Respuesta:
 
 ### `GET /features`
 
-Devuelve una lista de caracteristicas del enfoque multi-agent.
+Devuelve el contenido cargado en SQLite por el seed inicial.
 
-Ejemplo:
-
-```bash
-curl http://localhost:3011/features
-```
-
-### `POST /agents/math`
-
-Ejecuta dos agentes en secuencia:
-
-1. Suma `add` al valor `number`.
-2. Multiplica el resultado por `multiply`.
-
-Body esperado:
+Respuesta:
 
 ```json
 {
-  "number": 10,
-  "add": 5,
-  "multiply": 3
+  "title": "5 caracteristicas de tener multi agents en Codex",
+  "items": [
+    "Permite dividir trabajo complejo entre agentes especializados.",
+    "Acelera investigacion, implementacion y validacion en paralelo.",
+    "Mejora el contexto por rol al separar analisis, codigo y revision.",
+    "Reduce cuellos de botella en tareas grandes o de varios pasos.",
+    "Facilita comparar enfoques antes de consolidar una solucion final."
+  ]
 }
 ```
+
+### `POST /agents/math`
 
 Ejemplo:
 
@@ -132,7 +167,7 @@ Respuesta:
 }
 ```
 
-Si algun valor no es numerico, la API responde con `400`:
+Si algun valor no es numerico, responde con `400`:
 
 ```json
 {
@@ -142,20 +177,14 @@ Si algun valor no es numerico, la API responde con `400`:
 
 ## Pruebas
 
-El proyecto incluye pruebas unitarias para:
+El proyecto incluye pruebas para:
 
-- `sumAgent`
-- `multiplyAgent`
-- `statusHandler`
-- `featuresHandler`
-- `agentsMathHandler`
+- controllers
+- services
+- validacion del endpoint matematico
 
 Ejecuta:
 
 ```bash
 npm test
 ```
-
-## Documentacion
-
-El detalle del ajuste reciente de validacion y pruebas esta en [docs/CHANGELOG_FIX_BUGS.md](/Users/alvarocortes/Documents/Codex/2-expess-app/docs/CHANGELOG_FIX_BUGS.md:1).

@@ -1,27 +1,30 @@
-const test = require("node:test");
-const assert = require("node:assert/strict");
+const test = require("node:test")
+const assert = require("node:assert/strict")
 
+const { statusHandler } = require("./controllers/statusController")
+const { createFeaturesHandler } = require("./controllers/featuresController")
+const { createAgentsMathHandler } = require("./controllers/agentsController")
 const {
   sumAgent,
   multiplyAgent,
-  statusHandler,
-  featuresHandler,
-  agentsMathHandler
-} = require("./server");
+  hasValidNumbers,
+  run
+} = require("./services/agentsMathService")
+const { FeaturesService } = require("./services/featuresService")
 
 function createMockResponse() {
   return {
     statusCode: 200,
     body: null,
     status(code) {
-      this.statusCode = code;
-      return this;
+      this.statusCode = code
+      return this
     },
     json(payload) {
-      this.body = payload;
-      return this;
+      this.body = payload
+      return this
     }
-  };
+  }
 }
 
 test("sumAgent suma el numero indicado", () => {
@@ -31,8 +34,8 @@ test("sumAgent suma el numero indicado", () => {
     input: 10,
     amount: 5,
     output: 15
-  });
-});
+  })
+})
 
 test("multiplyAgent multiplica el numero indicado", () => {
   assert.deepEqual(multiplyAgent(15, 3), {
@@ -41,44 +44,125 @@ test("multiplyAgent multiplica el numero indicado", () => {
     input: 15,
     amount: 3,
     output: 45
-  });
-});
+  })
+})
+
+test("hasValidNumbers valida que todos los valores sean finitos", () => {
+  assert.equal(hasValidNumbers(10, 5, 3), true)
+  assert.equal(hasValidNumbers(10, "5", 3), false)
+  assert.equal(hasValidNumbers(Number.NaN, 5, 3), false)
+})
+
+test("run ejecuta ambos agentes en secuencia", () => {
+  assert.deepEqual(run(10, 5, 3), {
+    input: 10,
+    agents: [
+      {
+        agent: "sum-agent",
+        operation: "add",
+        input: 10,
+        amount: 5,
+        output: 15
+      },
+      {
+        agent: "multiply-agent",
+        operation: "multiply",
+        input: 15,
+        amount: 3,
+        output: 45
+      }
+    ],
+    result: 45
+  })
+})
 
 test("statusHandler responde el estado del servicio", () => {
-  const res = createMockResponse();
+  const res = createMockResponse()
 
-  statusHandler({}, res);
+  statusHandler({}, res)
 
-  assert.equal(res.statusCode, 200);
+  assert.equal(res.statusCode, 200)
   assert.deepEqual(res.body, {
     status: "ok",
     service: "codex-multi-agent-api"
-  });
-});
+  })
+})
 
-test("featuresHandler responde la lista de caracteristicas", () => {
-  const res = createMockResponse();
+test("FeaturesService transforma el resultado del repository", async () => {
+  const repository = {
+    async findAllOrdered() {
+      return [
+        {
+          position: 1,
+          title: "5 caracteristicas de tener multi agents en Codex",
+          text: "Primera caracteristica."
+        },
+        {
+          position: 2,
+          title: "5 caracteristicas de tener multi agents en Codex",
+          text: "Segunda caracteristica."
+        }
+      ]
+    }
+  }
+  const service = new FeaturesService(repository)
 
-  featuresHandler({}, res);
+  const payload = await service.getFeaturesPayload()
 
-  assert.equal(res.statusCode, 200);
-  assert.equal(res.body.title, "5 caracteristicas de tener multi agents en Codex");
-  assert.equal(res.body.items.length, 5);
-});
+  assert.deepEqual(payload, {
+    title: "5 caracteristicas de tener multi agents en Codex",
+    items: ["Primera caracteristica.", "Segunda caracteristica."]
+  })
+})
 
-test("agentsMathHandler ejecuta ambos agentes en secuencia", () => {
+test("featuresHandler responde la lista de caracteristicas desde el service", async () => {
+  const res = createMockResponse()
+  const featuresHandler = createFeaturesHandler({
+    async getFeaturesPayload() {
+      return {
+        title: "5 caracteristicas de tener multi agents en Codex",
+        items: ["Uno", "Dos", "Tres", "Cuatro", "Cinco"]
+      }
+    }
+  })
+
+  await featuresHandler({}, res)
+
+  assert.equal(res.statusCode, 200)
+  assert.equal(res.body.title, "5 caracteristicas de tener multi agents en Codex")
+  assert.equal(res.body.items.length, 5)
+})
+
+test("featuresHandler responde 500 cuando el service falla", async () => {
+  const res = createMockResponse()
+  const featuresHandler = createFeaturesHandler({
+    async getFeaturesPayload() {
+      throw new Error("db down")
+    }
+  })
+
+  await featuresHandler({}, res)
+
+  assert.equal(res.statusCode, 500)
+  assert.deepEqual(res.body, {
+    error: "No fue posible obtener las caracteristicas."
+  })
+})
+
+test("agentsMathHandler responde el resultado esperado", () => {
   const req = {
     body: {
       number: 10,
       add: 5,
       multiply: 3
     }
-  };
-  const res = createMockResponse();
+  }
+  const res = createMockResponse()
+  const agentsMathHandler = createAgentsMathHandler()
 
-  agentsMathHandler(req, res);
+  agentsMathHandler(req, res)
 
-  assert.equal(res.statusCode, 200);
+  assert.equal(res.statusCode, 200)
   assert.deepEqual(res.body, {
     input: 10,
     agents: [
@@ -98,8 +182,8 @@ test("agentsMathHandler ejecuta ambos agentes en secuencia", () => {
       }
     ],
     result: 45
-  });
-});
+  })
+})
 
 test("agentsMathHandler valida que todos los valores sean numeros", () => {
   const req = {
@@ -108,28 +192,30 @@ test("agentsMathHandler valida que todos los valores sean numeros", () => {
       add: "5",
       multiply: 3
     }
-  };
-  const res = createMockResponse();
+  }
+  const res = createMockResponse()
+  const agentsMathHandler = createAgentsMathHandler()
 
-  agentsMathHandler(req, res);
+  agentsMathHandler(req, res)
 
-  assert.equal(res.statusCode, 400);
+  assert.equal(res.statusCode, 400)
   assert.deepEqual(res.body, {
     error: "Debes enviar number, add y multiply como numeros."
-  });
-});
+  })
+})
 
 test("agentsMathHandler responde 400 cuando no hay body", () => {
-  const req = {};
-  const res = createMockResponse();
+  const req = {}
+  const res = createMockResponse()
+  const agentsMathHandler = createAgentsMathHandler()
 
-  agentsMathHandler(req, res);
+  agentsMathHandler(req, res)
 
-  assert.equal(res.statusCode, 400);
+  assert.equal(res.statusCode, 400)
   assert.deepEqual(res.body, {
     error: "Debes enviar number, add y multiply como numeros."
-  });
-});
+  })
+})
 
 test("agentsMathHandler rechaza numeros no finitos", () => {
   const req = {
@@ -138,13 +224,14 @@ test("agentsMathHandler rechaza numeros no finitos", () => {
       add: 5,
       multiply: 3
     }
-  };
-  const res = createMockResponse();
+  }
+  const res = createMockResponse()
+  const agentsMathHandler = createAgentsMathHandler()
 
-  agentsMathHandler(req, res);
+  agentsMathHandler(req, res)
 
-  assert.equal(res.statusCode, 400);
+  assert.equal(res.statusCode, 400)
   assert.deepEqual(res.body, {
     error: "Debes enviar number, add y multiply como numeros."
-  });
-});
+  })
+})

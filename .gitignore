@@ -5,3 +5,5 @@ npm-debug.log*
 .agents
 .vs_code/
 .codex
+dev.db
+dev.db-journal
